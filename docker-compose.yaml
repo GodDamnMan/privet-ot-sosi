@@ -1,0 +1,58 @@
+x-common: &common
+  privileged: true
+  working_dir: /home/fabian/ros2_ws
+  stdin_open: true
+  tty: true
+  command: ["/bin/bash","-lc","exec bash"]
+
+x-env-common: &env_common
+  QT_X11_NO_MITSHM: "1"
+
+services:
+  terminal_win11:
+    <<: *common
+    profiles: ["win"]
+    image: fabook/cv:v0.0.2
+    volumes:
+      - .:/home/fabian/ros2_ws/src:rw
+      - /run/desktop/mnt/host/wslg/.X11-unix:/tmp/.X11-unix:rw
+      - /run/desktop/mnt/host/wslg:/mnt/wslg:rw
+    environment:
+      <<: *env_common
+      DISPLAY: ":0"
+      WAYLAND_DISPLAY: "wayland-0"
+      XDG_RUNTIME_DIR: "/mnt/wslg/runtime-dir"
+      PULSE_SERVER: "/mnt/wslg/PulseServer"
+
+  terminal_linux:
+    <<: *common
+    profiles: ["linux"]
+    image: fabook/cv:v0.0.2
+    network_mode: host
+    volumes:
+      - .:/home/fabian/ros2_ws/src:rw
+      - ${HOME}/.Xauthority:/home/fabian/.Xauthority:rw
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    environment:
+      <<: *env_common
+      DISPLAY: "${DISPLAY}"
+    devices:
+      - /dev/video0:/dev/video0
+      - /dev/video1:/dev/video1
+      - /dev/snd:/dev/snd
+    group_add:
+      - "video"
+      - "44"
+
+  terminal_macos:
+    <<: *common
+    profiles: ["macos"]
+    image: fabook/cv:arm-v0.0.2
+    volumes:
+      - .:/home/fabian/ros2_ws/src:rw
+    environment:
+      <<: *env_common
+      DISPLAY: "host.docker.internal:0"
+      QT_QPA_PLATFORM: "xcb"
+      LIBGL_ALWAYS_INDIRECT: "1"
+      QT_XCB_GL_INTEGRATION: "none"
