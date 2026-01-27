@@ -1,9 +1,9 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
+from std_msgs.msg import Int32MultiArray
 
-
-class MinimalPublisher(Node):
+class FakeEncoder(Node):
     def __init__(self):
         super().__init__('fake_encoder')
         self.declare_parameter('publish_rate_hz', 50.0)
@@ -11,27 +11,32 @@ class MinimalPublisher(Node):
         self.declare_parameter('left_rps', 1.0)  
         self.declare_parameter('right_rps', 1.2) 
 
-        self.rate_hz = self.get_parameter('publish_rate_hz').get_parameter_value().double_value
-        self.ticks_per_rev = self.get_parameter('ticks_per_rev').get_parameter_value().integer_value
-        self.left_rps = self.get_parameter('left_rps').get_parameter_value().double_value
-        self.right_rps = self.get_parameter('right_rps').get_parameter_value().double_value
+        self.rate_hz = self.get_parameter('publish_rate_hz').value
+        self.ticks_per_rev = self.get_parameter('ticks_per_rev').value
+        self.left_rps = self.get_parameter('left_rps').value
+        self.right_rps = self.get_parameter('right_rps').value
 
         self.left_ticks = 0
         self.right_ticks = 0
 
-
-
+        self.publisher_ = self.create_publisher(Int32MultiArray, '/wheel_ticks', 10)
+        timer_period = 1.0 / self.rate_hz
+        self.timer = self.create_timer(timer_period, self.timer_callback)
+        # msg = Int32MultiArray()
     def timer_callback(self):
-        msg = String()
-        msg.data = f"Hello World: {self.i}"
-        self.publisher_.publish(msg)
-        self.get_logger().info(f'Publishing: "{msg.data}"')
-        self.i += 1
+        left_rps = self.get_parameter('left_rps').value
+        right_rps = self.get_parameter('right_rps').value
+        dt = 1.0 / self.rate_hz
+        self.left_ticks += int(left_rps * self.ticks_per_rev * dt)
+        self.right_ticks += int(right_rps * self.ticks_per_rev * dt)
 
+        msg = Int32MultiArray()
+        msg.data = [self.left_ticks, self.right_ticks]
+        self.publisher_.publish(msg)
 
 def main(args=None):
     rclpy.init(args=args)
-    node = MinimalPublisher()
+    node = FakeEncoder()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
@@ -39,3 +44,6 @@ def main(args=None):
     finally:
         node.destroy_node()
         rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()  
