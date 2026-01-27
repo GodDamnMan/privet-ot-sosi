@@ -1,8 +1,7 @@
 from setuptools import setup
 
-ros_pkg_name = "privet-ot-sosi"   # ROS package name (package.xml / ros2 run)
-py_pkg_name  = "privet_ot_sosi"   # Python import package (folder)
-
+py_pkg_name  = "privet_ot_sosi"   
+ros_pkg_name = py_pkg_name
 setup(
     name=ros_pkg_name,
     version="0.0.0",
