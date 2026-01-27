@@ -12,7 +12,7 @@ services:
   terminal_win11:
     <<: *common
     profiles: ["win"]
-    image: fabook/cv:v0.0.2
+    image: fabook/cv:v0.0.5
     volumes:
       - .:/home/fabian/ros2_ws/src:rw
       - /run/desktop/mnt/host/wslg/.X11-unix:/tmp/.X11-unix:rw
@@ -27,7 +27,7 @@ services:
   terminal_linux:
     <<: *common
     profiles: ["linux"]
-    image: fabook/cv:v0.0.2
+    image: fabook/cv:v0.0.5
     network_mode: host
     volumes:
       - .:/home/fabian/ros2_ws/src:rw
@@ -47,7 +47,7 @@ services:
   terminal_macos:
     <<: *common
     profiles: ["macos"]
-    image: fabook/cv:arm-v0.0.2
+    image: fabook/cv:arm-v0.0.5
     volumes:
       - .:/home/fabian/ros2_ws/src:rw
     environment:

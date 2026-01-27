@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'sensors_and_sensing_demo'
+package_name = 'privet-ot-sosi'
 
 setup(
     name=package_name,
@@ -16,7 +16,7 @@ setup(
     maintainer='mobile',
     maintainer_email='mobile@todo.todo',
     description='TODO: Package description',
-    license='TODO: License declaration',
+    license='Apache-2.0',
     extras_require={
         'test': [
             'pytest',
@@ -24,8 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-                'talker = sensors_and_sensing_demo.pub:main',
-                'listener = sensors_and_sensing_demo.sub:main',
+                'fake_encoder = privet-ot-sosi.fake_encoder:main',
         ],
     },
 )

@@ -13,6 +13,14 @@ class MinimalPublisher(Node):
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
 
+
+        self.declare_parameter('my_parameter', 'default_value')
+        
+        self.declare_parameter('my_parameter', 'default_value')
+        
+        self.declare_parameter('my_parameter', 'default_value')
+
+
     def timer_callback(self):
         msg = String()
         msg.data = 'Hello World: %d' % self.i
