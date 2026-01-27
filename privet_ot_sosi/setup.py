@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'privet-ot-sosi'
+package_name = 'privet_ot_sosi'
 
 setup(
     name=package_name,
@@ -24,7 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-                'fake_encoder = privet-ot-sosi.fake_encoder:main',
+            f'encoder_driver={package_name}.encoder_driver:main'
         ],
     },
 )

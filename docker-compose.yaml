@@ -1,6 +1,6 @@
 x-common: &common
   privileged: true
-  working_dir: /home/fabian/ros2_ws
+  working_dir: /home/mobile/ros2_ws
   stdin_open: true
   tty: true
   command: ["/bin/bash","-lc","exec bash"]
@@ -12,9 +12,9 @@ services:
   terminal_win11:
     <<: *common
     profiles: ["win"]
-    image: fabook/cv:v0.0.5
+    image: fabook/cv:v0.0.2
     volumes:
-      - .:/home/fabian/ros2_ws/src:rw
+      - .:/home/mobile/ros2_ws/src:rw
       - /run/desktop/mnt/host/wslg/.X11-unix:/tmp/.X11-unix:rw
       - /run/desktop/mnt/host/wslg:/mnt/wslg:rw
     environment:
@@ -27,11 +27,11 @@ services:
   terminal_linux:
     <<: *common
     profiles: ["linux"]
-    image: fabook/cv:v0.0.5
+    image: fabook/cv:v0.0.2
     network_mode: host
     volumes:
-      - .:/home/fabian/ros2_ws/src:rw
-      - ${HOME}/.Xauthority:/home/fabian/.Xauthority:rw
+      - .:/home/mobile/ros2_ws/src:rw
+      - ${HOME}/.Xauthority:/home/mobile/.Xauthority:rw
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
     environment:
       <<: *env_common
@@ -47,9 +47,9 @@ services:
   terminal_macos:
     <<: *common
     profiles: ["macos"]
-    image: fabook/cv:arm-v0.0.5
+    image: fabook/cv:arm-v0.0.2
     volumes:
-      - .:/home/fabian/ros2_ws/src:rw
+      - .:/home/mobile/ros2_ws/src:rw
     environment:
       <<: *env_common
       DISPLAY: "host.docker.internal:0"
