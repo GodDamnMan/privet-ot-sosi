@@ -10,6 +10,7 @@ class EncoderDriver(Node):
     def __init__(self, ticks_per_rev:int = 2048, pub_rate:float = 1):
         super().__init__('encoder_driver')
         self.ticks_per_rev = ticks_per_rev
+        self.pub_rate = pub_rate
 
         self.subscription_ = self.create_subscription(
             Int32MultiArray,
@@ -22,22 +23,27 @@ class EncoderDriver(Node):
             JointState, 
             '/joint_states', 
             10)
-        self.names:list[str] = ['left_wheel_joint', 'right_wheel_joint']
-        self.poses:list[float] = [0., 0.]
-        self.vels:list[float] = [0., 0.]
+        self.name:list[str] = ['left_wheel_joint', 'right_wheel_joint']
+        self.pos:list[float] = [0., 0.]
+        self.vel:list[float] = [0., 0.]
         self.timer = self.create_timer(pub_rate, self.timer_callback)
 
 
     def listener_callback(self, msg) -> None:
-        # self.get_logger().info(f'I heard: {msg[0]}, {msg[1]}')
         self.ticks = msg.data
+        # self.get_logger().info(f'I heard: {msg.data}')
+        
 
 
     def timer_callback(self):
+        self.prev_pos = self.pos
+        self.pos = [i/self.ticks_per_rev for i in self.ticks]
+        self.vel = [(self.pos[i] - self.prev_pos[i])/self.pub_rate for i in range(len(self.name))]
+
         msg = JointState()
-        msg.name = self.names
-        msg.position = [i/self.ticks_per_rev for i in self.ticks]
-        msg.velocity = self.vels
+        msg.name = self.name
+        msg.position = self.pos
+        msg.velocity = self.vel
 
         self.publisher_.publish(msg)
         # self.get_logger().info(f'Publishing {self.names} joint state')

@@ -24,7 +24,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            f'encoder_driver={package_name}.encoder_driver:main'
+            f'encoder_driver={package_name}.encoder_driver:main',
+            f"fake_encoder = {package_name}.fake_encoder:main"
         ],
     },
 )
