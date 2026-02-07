@@ -1,10 +1,10 @@
+import math
 import rclpy
 from rclpy.node import Node
 
 from std_msgs.msg import String, Int32MultiArray
 from sensor_msgs.msg import JointState
 
-    
 
 class EncoderDriver(Node):
     def __init__(self, ticks_per_rev:int = 2048, pub_rate:float = 1):
@@ -36,10 +36,11 @@ class EncoderDriver(Node):
 
 
     def timer_callback(self):
-        self.prev_pos = self.pos
-        self.pos = [i/self.ticks_per_rev for i in self.ticks]
+        self.prev_pos = self.pos.copy()
+        self.pos = [2.0 * math.pi * i / self.ticks_per_rev for i in self.ticks]
+        
         self.vel = [(self.pos[i] - self.prev_pos[i])/self.pub_rate for i in range(len(self.name))]
-
+           
         msg = JointState()
         msg.name = self.name
         msg.position = self.pos
