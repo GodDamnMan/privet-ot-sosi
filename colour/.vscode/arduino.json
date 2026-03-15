@@ -1,0 +1,22 @@
+{
+  "port": "/dev/ttyACM0",
+  "configuration": "cpu=atmega2560",
+  "output": "build",
+  "board": "arduino:avr:mega",
+  "programmer": "",
+  "useProgrammer": false,
+  "optimize_for_debug": false,
+  "configurationRequired": true,
+  "compile_profile": "profile-1772533484503",
+  "monitorPortSettings": {
+    "settings": {
+      "port": "/dev/ttyACM0",
+      "baudRate": 115200,
+      "lineEnding": "\r\n",
+      "dataBits": 8,
+      "parity": "none",
+      "stopBits": "one"
+    },
+    "profile_name": ""
+  }
+}

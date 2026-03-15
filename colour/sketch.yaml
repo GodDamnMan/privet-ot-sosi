@@ -1,0 +1,12 @@
+profiles:
+  profile-1772533484503:
+    fqbn: arduino:avr:mega:cpu=atmega2560
+    platforms:
+      - platform: arduino:avr (1.8.7)
+    programmer: ""
+    port: /dev/ttyACM0
+    port_config:
+      baudrate: "115200"
+      bits: "8"
+      parity: none
+      stop_bits: one
