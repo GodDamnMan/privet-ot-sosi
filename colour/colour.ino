@@ -3,7 +3,7 @@ int greenPin = 6;
 int bluePin = 7;
 const int ldrPin = A0;
 const int tresh = 100;
-// ТВОИ ЗНАЧЕНИЯ ИЗ КАЛИБРОВКИ
+//ЗНАЧЕНИЯ ИЗ КАЛИБРОВКИ
 int rWhite = 159, rBlack = 938; 
 int gWhite = 507, gBlack = 1007;
 int bWhite = 433, bBlack = 1012;
@@ -36,14 +36,10 @@ void loop() {
   g = constrain(g, 0, 255);
   b = constrain(b, 0, 255);
 
-  // 3. Вывод данных
   Serial.print("RGB: "); Serial.print(r); Serial.print("/");
   Serial.print(g); Serial.print("/"); Serial.println(b);
 
-
-  // 4. Логика распознавания
   if (r < tresh && b < tresh && g < tresh) Serial.println("---I look at heaven---"); 
-  else if ( < r <)
   else if (r > g && r > b) Serial.println("--- КРАСНЫЙ ---");
   else if (g > r && g > b) Serial.println("--- СИНИЙ ---");
   else if (b > r && b > g) Serial.println("--- ЗЕЛЕНЫЙ ---");
@@ -55,6 +51,6 @@ int getReading(int pin) {
   digitalWrite(pin, LOW); // Вкл (анод)
   delay(100); 
   int val = analogRead(ldrPin);
-  digitalWrite(pin, HIGH); // Выкл
+  digitalWrite(pin, HIGH);
   return val;
 }
