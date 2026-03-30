@@ -14,8 +14,8 @@ class MPU6050Node(Node):
 
     REG_PWR_MGMT_1 = 0x6B
     REG_ACCEL_START = 0x3B  
-
-
+    ACCEL_LSB_PER_G = 16384.0
+    
     GYRO_LSB_PER_DPS = 131.0
     G_STD = 9.80665
 
