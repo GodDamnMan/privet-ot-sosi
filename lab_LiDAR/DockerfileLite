@@ -1,0 +1,137 @@
+FROM ros:humble-ros-base
+
+# Set ROS distro
+ENV ROS_DISTRO=humble
+
+# Set arguments for user creation
+ARG USERNAME=fabian
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# Create USER
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
+    && apt-get update \
+    && apt-get install -y sudo \
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
+
+# Update and install necessary packages
+RUN apt-get update && apt-get upgrade -y \
+    && apt-get install -y sudo curl gnupg2 lsb-release net-tools python3-pip \
+    && curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add - \
+    && echo "deb http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2-latest.list
+
+# Build deps for pip packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3-pip python3-dev python3-venv \
+    build-essential pkg-config \
+    portaudio19-dev libasound2-dev \
+    libgl1 libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# System tools
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y \
+    sudo git wget nano tree \
+    iputils-ping python3-pip \
+    --fix-missing
+
+# Extra libs
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends \
+    libcanberra-gtk-module \
+    libcanberra-gtk3-module \
+    at-spi2-core x11-apps xauth \
+    libgflags-dev libdw-dev \
+    nlohmann-json3-dev \
+    alsa-utils pulseaudio portaudio19-dev \
+    --fix-missing
+
+# Python lib
+RUN python3 -m pip install --no-cache-dir --upgrade pip \
+    && python3 -m pip install --no-cache-dir smbus2
+
+# Common ROS2 tools
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends \
+    ros-${ROS_DISTRO}-tf2-tools \
+    ros-${ROS_DISTRO}-rviz2 \
+    ros-${ROS_DISTRO}-hardware-interface \
+    ros-${ROS_DISTRO}-imu-tools \
+    ros-${ROS_DISTRO}-robot-localization \
+    ros-${ROS_DISTRO}-rviz-default-plugins \
+    ros-${ROS_DISTRO}-rqt-tf-tree \
+    --fix-missing
+
+# ============================================================
+# Livox Mid-70 ROS2 Driver (isolated workspace: ~/livox_ws)
+# Uses Livox SDK1 + livox_ros2_driver (supports Mid-70)
+# ============================================================
+
+# Livox build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpcl-dev \
+    ros-${ROS_DISTRO}-pcl-conversions \
+    cmake \
+    && rm -rf /var/lib/apt/lists/*
+
+# Build Livox SDK1 from source (with -fPIC + missing <memory> fix for GCC 13+)
+RUN cd /tmp \
+    && git clone https://github.com/Livox-SDK/Livox-SDK.git \
+    && cd Livox-SDK \
+    && sed -i '/^#include "noncopyable.h"/a #include <memory>' sdk_core/src/base/thread_base.h \
+    && sed -i '/^#include "thread_base.h"/a #include <memory>' sdk_core/src/base/thread_base.cpp \
+    && mkdir -p build && cd build \
+    && cmake .. -DCMAKE_C_FLAGS="-fPIC" -DCMAKE_CXX_FLAGS="-fPIC" \
+    && make -j$(nproc) \
+    && make install \
+    && rm -rf /tmp/Livox-SDK
+
+# Rename static lib so the ROS driver builds its own shared version
+RUN if [ -f /usr/local/lib/livox_sdk_static.a ]; then \
+      mv /usr/local/lib/livox_sdk_static.a /usr/local/lib/livox_sdk_static.a.bak; \
+    fi
+
+# Clone livox_ros2_driver (Humble fork, supports Mid-40/Mid-70/Horizon/Avia/Tele-15)
+USER ${USERNAME}
+RUN mkdir -p /home/${USERNAME}/livox_ws/src \
+    && cd /home/${USERNAME}/livox_ws/src \
+    && git clone https://github.com/silolytics/livox_ros2_driver_humble.git
+
+# Inject custom LiDAR config (replaces default before build)
+USER root
+COPY livox_lidar_config.json /home/${USERNAME}/livox_ws/src/livox_ros2_driver_humble/livox_ros2_driver/config/livox_lidar_config.json
+RUN chown ${USER_UID}:${USER_GID} /home/${USERNAME}/livox_ws/src/livox_ros2_driver_humble/livox_ros2_driver/config/livox_lidar_config.json
+
+# Build the Livox workspace
+USER ${USERNAME}
+RUN /bin/bash -c "\
+    source /opt/ros/${ROS_DISTRO}/setup.bash && \
+    cd /home/${USERNAME}/livox_ws && \
+    colcon build --cmake-args -DCMAKE_CXX_FLAGS='-fPIC' -Wno-dev \
+    "
+
+RUN pip install open3d numpy scipy matplotlib rosbags
+
+# ============================================================
+# Final setup
+# ============================================================
+
+USER root
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN rosdep init || true && rosdep update
+
+USER ${USERNAME}
+
+# Source ROS + Livox workspace
+RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> /home/${USERNAME}/.bashrc \
+    && echo "source /home/${USERNAME}/livox_ws/install/setup.bash" >> /home/${USERNAME}/.bashrc
+
+RUN mkdir -p /home/${USERNAME}/ros2_ws/src
+
+CMD ["bash"]
+
+# docker build -t image_name -f DockerfileLite .
